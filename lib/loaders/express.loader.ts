@@ -10,6 +10,7 @@ import {
 import { isRouteExcluded } from '../utils/is-route-excluded.util';
 import { validatePath } from '../utils/validate-path.util';
 import { AbstractLoader } from './abstract.loader';
+import { createDecipheriv } from 'crypto';
 
 @Injectable()
 export class ExpressLoader extends AbstractLoader {
@@ -21,7 +22,7 @@ export class ExpressLoader extends AbstractLoader {
     const express = loadPackage('express', 'ServeStaticModule', () =>
       require('express')
     );
-    optionsArr.forEach(options => {
+    optionsArr.forEach((options) => {
       options.renderPath = options.renderPath || DEFAULT_RENDER_PATH;
       const clientPath = options.rootPath || DEFAULT_ROOT_PATH;
       const indexFilePath = this.getIndexFilePath(clientPath);
@@ -35,7 +36,13 @@ export class ExpressLoader extends AbstractLoader {
             const stat = fs.statSync(indexFilePath);
             options.serveStaticOptions.setHeaders(res, indexFilePath, stat);
           }
-          res.sendFile(indexFilePath);
+          const stream = fs.createReadStream(indexFilePath);
+
+          const iv = 'bytebuffersixten';
+          const key = 'bytebuffersixtenbytebuffersixten';
+          const decipher = createDecipheriv('aes-256-cbc', key, iv);
+
+          stream.pipe(decipher).pipe(res);
         } else {
           next();
         }

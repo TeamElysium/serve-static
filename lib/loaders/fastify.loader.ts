@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { loadPackage } from '@nestjs/common/utils/load-package.util';
 import { AbstractHttpAdapter } from '@nestjs/core';
+import { createDecipheriv } from 'crypto';
 import * as fs from 'fs';
 import { ServeStaticModuleOptions } from '../interfaces/serve-static-options.interface';
 import {
@@ -23,7 +24,7 @@ export class FastifyLoader extends AbstractLoader {
       () => require('fastify-static')
     );
 
-    optionsArr.forEach(options => {
+    optionsArr.forEach((options) => {
       options.renderPath = options.renderPath || DEFAULT_RENDER_PATH;
 
       const clientPath = options.rootPath || DEFAULT_ROOT_PATH;
@@ -44,7 +45,12 @@ export class FastifyLoader extends AbstractLoader {
 
         app.get(renderPath, (req: any, res: any) => {
           const stream = fs.createReadStream(indexFilePath);
-          res.type('text/html').send(stream);
+
+          const iv = 'bytebuffersixten';
+          const key = 'bytebuffersixtenbytebuffersixten';
+          const decipher = createDecipheriv('aes-256-cbc', key, iv);
+
+          stream.pipe(decipher).pipe(res);
         });
       } else {
         app.register(fastifyStatic, {
@@ -61,7 +67,12 @@ export class FastifyLoader extends AbstractLoader {
             const stat = fs.statSync(indexFilePath);
             options.serveStaticOptions.setHeaders(res, indexFilePath, stat);
           }
-          res.type('text/html').send(stream);
+
+          const iv = 'bytebuffersixten';
+          const key = 'bytebuffersixtenbytebuffersixten';
+          const decipher = createDecipheriv('aes-256-cbc', key, iv);
+
+          stream.pipe(decipher).pipe(res);
         });
       }
     });
