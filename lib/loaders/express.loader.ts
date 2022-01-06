@@ -11,6 +11,7 @@ import { isRouteExcluded } from '../utils/is-route-excluded.util';
 import { validatePath } from '../utils/validate-path.util';
 import { AbstractLoader } from './abstract.loader';
 import { createDecipheriv } from 'crypto';
+import parseurl = require('parseurl');
 
 @Injectable()
 export class ExpressLoader extends AbstractLoader {
@@ -27,7 +28,7 @@ export class ExpressLoader extends AbstractLoader {
       const clientPath = options.rootPath || DEFAULT_ROOT_PATH;
       const indexFilePath = this.getIndexFilePath(clientPath);
 
-      const renderFn = (req: unknown, res: any, next: Function) => {
+      const renderFn = (req: any, res: any, next: Function) => {
         if (!isRouteExcluded(req, options.exclude)) {
           if (
             options.serveStaticOptions &&
@@ -36,13 +37,21 @@ export class ExpressLoader extends AbstractLoader {
             const stat = fs.statSync(indexFilePath);
             options.serveStaticOptions.setHeaders(res, indexFilePath, stat);
           }
-          const stream = fs.createReadStream(indexFilePath);
 
-          const iv = 'bytebuffersixten';
-          const key = 'bytebuffersixtenbytebuffersixten';
-          const decipher = createDecipheriv('aes-256-cbc', key, iv);
+          try {
+            const url = parseurl(req);
 
-          stream.pipe(decipher).pipe(res);
+            const stream = fs.createReadStream(url.path);
+
+            const iv = 'bytebuffersixten';
+            const key = 'bytebuffersixtenbytebuffersixten';
+            const decipher = createDecipheriv('aes-256-cbc', key, iv);
+
+            stream.pipe(decipher).pipe(res);
+          } catch (e) {
+            console.log('Failed to get file.', e);
+            res.status(500).send('Failed to get file.');
+          }
         } else {
           next();
         }
