@@ -12,6 +12,7 @@ import { validatePath } from '../utils/validate-path.util';
 import { AbstractLoader } from './abstract.loader';
 import { createDecipheriv } from 'crypto';
 import parseurl = require('parseurl');
+import path = require('path');
 
 @Injectable()
 export class ExpressLoader extends AbstractLoader {
@@ -40,8 +41,10 @@ export class ExpressLoader extends AbstractLoader {
 
           try {
             const url = parseurl(req);
+            const filePath = path.join(clientPath, url.path);
 
-            const stream = fs.createReadStream(url.path);
+            const stat = fs.statSync(filePath);
+            const stream = fs.createReadStream(filePath);
 
             const iv = 'bytebuffersixten';
             const key = 'bytebuffersixtenbytebuffersixten';
@@ -69,8 +72,8 @@ export class ExpressLoader extends AbstractLoader {
 
         app.get(renderPath, renderFn);
       } else {
-        app.use(express.static(clientPath, options.serveStaticOptions));
         app.get(options.renderPath, renderFn);
+        app.use(express.static(clientPath, options.serveStaticOptions));
       }
     });
   }
