@@ -1,7 +1,15 @@
 import { Provider, Type } from '@nestjs/common';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
 
+
 export interface ServeStaticModuleOptions {
+  /**
+   * Secret Key and Iv for encryption. Default: "bytebuffersixtenbytebuffersixten" ,"bytebuffersixten"
+   */
+  secret?: {
+    key: string,
+    iv: string,
+  };
   /**
    * Static files root directory. Default: "client"
    */

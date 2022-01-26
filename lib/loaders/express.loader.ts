@@ -13,6 +13,7 @@ import { AbstractLoader } from './abstract.loader';
 import { createDecipheriv } from 'crypto';
 import parseurl = require('parseurl');
 import path = require('path');
+import { DEFAULT_SECRET } from '..';
 
 @Injectable()
 export class ExpressLoader extends AbstractLoader {
@@ -28,6 +29,7 @@ export class ExpressLoader extends AbstractLoader {
       options.renderPath = options.renderPath || DEFAULT_RENDER_PATH;
       const clientPath = options.rootPath || DEFAULT_ROOT_PATH;
       const indexFilePath = this.getIndexFilePath(clientPath);
+      const {key, iv} = options.secret || DEFAULT_SECRET
 
       const renderFn = (req: any, res: any, next: Function) => {
         if (!isRouteExcluded(req, options.exclude)) {
@@ -46,8 +48,6 @@ export class ExpressLoader extends AbstractLoader {
             const stat = fs.statSync(filePath);
             const stream = fs.createReadStream(filePath);
 
-            const iv = 'bytebuffersixten';
-            const key = 'bytebuffersixtenbytebuffersixten';
             const decipher = createDecipheriv('aes-256-cbc', key, iv);
 
             stream.pipe(decipher).pipe(res);
