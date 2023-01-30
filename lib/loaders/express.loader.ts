@@ -29,7 +29,7 @@ export class ExpressLoader extends AbstractLoader {
       options.renderPath = options.renderPath || DEFAULT_RENDER_PATH;
       const clientPath = options.rootPath || DEFAULT_ROOT_PATH;
       const indexFilePath = this.getIndexFilePath(clientPath);
-      const {key, iv} = options.secret || DEFAULT_SECRET
+      const { key, iv } = options.secret || DEFAULT_SECRET;
 
       const renderFn = (req: any, res: any, next: Function) => {
         if (!isRouteExcluded(req, options.exclude)) {
@@ -50,6 +50,10 @@ export class ExpressLoader extends AbstractLoader {
 
             const decipher = createDecipheriv('aes-256-cbc', key, iv);
 
+            res.set(
+              'Cache-Control',
+              'private, no-transform, immutable, max-age=604800'
+            );
             stream.pipe(decipher).pipe(res);
           } catch (e) {
             console.log('Failed to get file.', e);
